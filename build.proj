@@ -12,14 +12,14 @@
 
 	<Target Name="do_build">
 	<!-- The next line is a call to your visual studio csproj file, open in VS.net and fix references if needed. -->
-	<MSBuild Projects=".\MyModuleCode\MyModuleCode.csproj" Properties="Configuration=Debug" />	
+	<MSBuild Projects=".\Rollbar\Rollbar.csproj" Properties="Configuration=Debug" />	
 
     	<CallTarget Targets="build_module"/>	
   </Target>
   
   
   <Target Name="build_module">
-    <Exec Command="$(CreateModule) -buildmodule Example.Module -output &quot;.&quot; -buildfile Module.Build.xml"/>
+    <Exec Command="$(CreateModule) -buildmodule Rollbar -output &quot;.&quot; -buildfile Module.Build.xml"/>
   </Target>
   
 </Project>

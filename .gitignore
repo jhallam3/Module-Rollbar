@@ -1,0 +1,11 @@
+################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Rollbar.zip
+/.vs/decisions-mod-skeleton/v16/.suo
+/.vs/Rollbar/v16/Server/sqlite3
+/.vs
+/Rollbar/bin/Debug
+/Rollbar/obj/Debug
+/Rollbar/obj/Release
