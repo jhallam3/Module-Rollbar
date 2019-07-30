@@ -21,6 +21,8 @@ namespace Rollbar
     [DataContract]
     public class RollbarSettings : AbstractModuleSettings
     {
+        
+
         public RollbarSettings()
         {
             EntityName = "Rollbar Logging Settings";
@@ -29,6 +31,11 @@ namespace Rollbar
         [ORMField]
         public string PostServerItemID { get; set; }
 
+        [ORMField]
+        public string ContactEmailAddress { get; set; }
+     
+        [ORMField]
+        public string environment { get; set; }
         [ORMField]
         public bool EnableLogging { get; set; }
         [ORMField]

@@ -4,10 +4,11 @@ using DecisionsFramework.ServiceLayer;
 using DecisionsFramework.ServiceLayer.Services.Folder;
 using DecisionsFramework.ServiceLayer.Services.Portal;
 using DecisionsFramework.ServiceLayer.Utilities;
-
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace Rollbar
     public class ModuleInit : ILogWriter, IInitializable
     {
         public static object instance;
+        RollbarSettings SettingsInDecisions = ModuleSettingsAccessor<RollbarSettings>.GetSettings();
         public void Initialize()
         {
 
@@ -42,60 +44,78 @@ namespace Rollbar
         
         public void Write(LogData LogMessage)
         {
-            //System.IO.File.AppendAllText("jsonLogs.json", JsonConvert.SerializeObject(LogMessage));
-            var ip = GetIPAddress();
-            var idic = new Dictionary<string, object>()
-{
-                {"Decisions.Version", DecisionsVersion.CODE_VERSION },
-                {"Decisions.Host",  "http://" + ip +"/" + Settings.InstanceSettings.VirtualDirectory },
-                { "user_ip",ip}
+            
+            if (SettingsInDecisions.EnableLogging == true)
+            {
+
+
+                if (LogMessage.Level == LogSeverity.Debug && SettingsInDecisions.LogDebug == true)
+                {
+                    PostToRollbar(CreateDataToSend(SettingsInDecisions, LogMessage));
+                }
+                else if (LogMessage.Level == LogSeverity.Error && SettingsInDecisions.LogError == true)
+                {
+                    PostToRollbar(CreateDataToSend(SettingsInDecisions, LogMessage));
+                }
+                else if (LogMessage.Level == LogSeverity.Fatal && SettingsInDecisions.LogFatal == true)
+                {
+                    PostToRollbar(CreateDataToSend(SettingsInDecisions, LogMessage));
+                }
+                else if (LogMessage.Level == LogSeverity.Info && SettingsInDecisions.LogInfo == true)
+                {
+                    PostToRollbar(CreateDataToSend(SettingsInDecisions, LogMessage));
+                }
+
+                else if (LogMessage.Level == LogSeverity.Warn && SettingsInDecisions.LogWarn == true)
+                {
+                    PostToRollbar(CreateDataToSend(SettingsInDecisions, LogMessage));
+                }
+
+
+            }
+
+        }
+
+        private Rollbar.Classes.JsonRollbarRootObject CreateDataToSend (RollbarSettings settings, LogData LogMessage)
+        {
+
+
+            var jdatabody = new Rollbar.Classes.Body()
+            {
+                message = new Classes.Message { body = LogMessage.Exception.ToString() }
             };
 
-            // ADD IN Level so we dont blow the budget 
-            // ADD IN Level so we dont blow the budget 
 
-         
-            var SettingsInDecisions = ModuleSettingsAccessor<RollbarSettings>.GetSettings();
+
             
-            // this rollbar ID is for DecisionsInternal.
-            RollbarLocator.RollbarInstance.Configure(new RollbarConfig(SettingsInDecisions.PostServerItemID));
-            //new RollbarConfig
-            //{
-            //    Transform = payload =>
-            //    {
 
-            //        payload.Data.CodeVersion = "2";
-            //        payload.Data.Request = new Request()
-            //        {
-            //            Url = "http://rollbar.com",
-            //            user = "192.121.222.92"
-            //        };
-            //    }
-            //};
-            if (LogMessage.Level == LogSeverity.Debug && SettingsInDecisions.LogDebug == true)
+            var jdataperson = new Rollbar.Classes.Person()
+            {  email = SettingsInDecisions.ContactEmailAddress, id = SettingsInDecisions.ContactEmailAddress, username = SettingsInDecisions.ContactEmailAddress};
+
+            var jdataserver = new Rollbar.Classes.Server()
             {
-                RollbarLocator.RollbarInstance.Debug(LogMessage, idic);
-            }
-            else if (LogMessage.Level == LogSeverity.Error && SettingsInDecisions.LogError == true)
+                code_version = DecisionsVersion.CODE_VERSION.ToString(), cpu = GetCPUManufacturer(), host = GetComputerName(), ram = GetPhysicalMemory()
+            };
+
+            var jdatarequest = new Rollbar.Classes.Request() { user_ip = GetIPAddress() };
+
+            var jdatatosend = new Rollbar.Classes.Data()
             {
-                RollbarLocator.RollbarInstance.Error(LogMessage, idic);
-            }
-            else if (LogMessage.Level == LogSeverity.Fatal && SettingsInDecisions.LogFatal == true)
-            {
-                RollbarLocator.RollbarInstance.Critical(LogMessage, idic);
-            }
-            else if (LogMessage.Level == LogSeverity.Info && SettingsInDecisions.LogInfo == true)
-            {
-                RollbarLocator.RollbarInstance.Info(LogMessage, idic);
-            }
+                body = jdatabody,
+                code_version = DecisionsVersion.CODE_VERSION.ToString(),
+                environment = SettingsInDecisions.environment,
+                level = LogMessage.Level.ToString(),
+                person = jdataperson,
+                request = jdatarequest,
+                server = jdataserver
+            };
+
+
+            return new Classes.JsonRollbarRootObject() { access_token = settings.PostServerItemID, data = jdatatosend };
+
             
-            else if (LogMessage.Level == LogSeverity.Warn && SettingsInDecisions.LogWarn == true)
-            {
-                RollbarLocator.RollbarInstance.Warning(LogMessage, idic);
-            }
 
-           
-
+            
         }
 
         public string GetIPAddress()
@@ -106,12 +126,74 @@ namespace Rollbar
             return ipAddress.ToString();
         }
 
+        private void PostToRollbar(Rollbar.Classes.JsonRollbarRootObject jsonRollbar)
+        {
+            using (var client = new WebClient())
+            {
+                var dataString = JsonConvert.SerializeObject(jsonRollbar);
+                client.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                client.UploadString(new Uri("https://api.rollbar.com/api/1/item/"), "POST", dataString);
+            }
+        }
         private void EnsureCustomSettingsObject()
         {
             ModuleSettingsAccessor<RollbarSettings>.GetSettings();
             ModuleSettingsAccessor<RollbarSettings>.SaveSettings();
         }
 
+        public static string GetCPUManufacturer()
+        {
+            string cpuMan = String.Empty;
+            //create an instance of the Managemnet class with the
+            //Win32_Processor class
+            ManagementClass mgmt = new ManagementClass("Win32_Processor");
+            //create a ManagementObjectCollection to loop through
+            ManagementObjectCollection objCol = mgmt.GetInstances();
+            //start our loop for all processors found
+            foreach (ManagementObject obj in objCol)
+            {
+                if (cpuMan == String.Empty)
+                {
+                    // only return manufacturer from first CPU
+                    cpuMan = obj.Properties["Manufacturer"].Value.ToString();
+                }
+            }
+            return cpuMan;
+        }
+
+        public static String GetComputerName()
+        {
+            ManagementClass mc = new ManagementClass("Win32_ComputerSystem");
+            ManagementObjectCollection moc = mc.GetInstances();
+            String info = String.Empty;
+            foreach (ManagementObject mo in moc)
+            {
+                info = (string)mo["Name"];
+                //mo.Properties["Name"].Value.ToString();
+                //break;
+            }
+            return info;
+        }
+
+        public static string GetPhysicalMemory()
+        {
+            ManagementScope oMs = new ManagementScope();
+            ObjectQuery oQuery = new ObjectQuery("SELECT Capacity FROM Win32_PhysicalMemory");
+            ManagementObjectSearcher oSearcher = new ManagementObjectSearcher(oMs, oQuery);
+            ManagementObjectCollection oCollection = oSearcher.Get();
+
+            long MemSize = 0;
+            long mCap = 0;
+
+            // In case more than one Memory sticks are installed
+            foreach (ManagementObject obj in oCollection)
+            {
+                mCap = Convert.ToInt64(obj["Capacity"]);
+                MemSize += mCap;
+            }
+            MemSize = (MemSize / 1024) / 1024;
+            return MemSize.ToString() + "MB";
+        }
 
         //private void SetupFolders()
         //{

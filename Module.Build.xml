@@ -8,15 +8,7 @@
     <SLFrontendFrameworkDll>..\..\output\bincore\DecisionsFramework.SL.dll</SLFrontendFrameworkDll>
     <SilverLightsSDKAssembliesPath>C:\Program Files\Decisions\Decisions Services Manager\SilverLightAssemblies</SilverLightsSDKAssembliesPath>
     <References>
-      <string>.\packages\Microsoft.Extensions.Configuration.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</string>												
-      <string>.\packages\Microsoft.Extensions.Configuration.Abstractions.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</string>												
-      <string>.\packages\Microsoft.Extensions.Configuration.Binder.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.Binder.dll</string>												
-      <string>.\packages\Microsoft.Extensions.Configuration.FileExtensions.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.FileExtensions.dll</string>												
-      <string>.\packages\Microsoft.Extensions.Configuration.Json.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.Json.dll</string>												
-      <string>.\packages\Microsoft.Extensions.FileProviders.Abstractions.2.0.0\lib\netstandard2.0\Microsoft.Extensions.FileProviders.Abstractions.dll</string>												
-      <string>.\packages\Microsoft.Extensions.FileProviders.Physical.2.0.0\lib\netstandard2.0\Microsoft.Extensions.FileProviders.Physical.dll</string>												
-      <string>.\packages\Microsoft.Extensions.FileSystemGlobbing.2.0.0\lib\netstandard2.0\Microsoft.Extensions.FileSystemGlobbing.dll</string>												
-      <string>.\packages\Microsoft.Extensions.Primitives.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</string>												
+      										
       										
       											
 	</References>
